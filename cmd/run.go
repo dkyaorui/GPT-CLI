@@ -26,8 +26,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/charmbracelet/glamour"
 	"github.com/dkyaorui/gpt-cli/common"
+	"github.com/dkyaorui/gpt-cli/config"
+
+	"github.com/charmbracelet/glamour"
 	"github.com/fzdwx/infinite"
 	"github.com/fzdwx/infinite/components"
 	"github.com/fzdwx/infinite/components/input/text"
@@ -35,6 +37,7 @@ import (
 	"github.com/fzdwx/infinite/theme"
 	"github.com/sashabaranov/go-openai"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func init() {
@@ -46,15 +49,13 @@ type Container struct {
 	messages []openai.ChatCompletionMessage
 }
 
-const token = ""
-
 const (
 	interruptedCmd = 0
 	finishCmd      = 1
-	continueCmd    = 2
 )
 
 func (c *Container) InitContainer() {
+	token := viper.GetString(config.TokenConfigKey)
 	c.client = openai.NewClient(token)
 	c.resetMessages()
 }

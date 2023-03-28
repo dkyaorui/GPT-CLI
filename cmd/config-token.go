@@ -24,34 +24,42 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/dkyaorui/gpt-cli/config"
+
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
-// createCmd represents the create command
-var createCmd = &cobra.Command{
-	Use:   "create",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+// tokenCmd represents the token command
+var tokenCmd = &cobra.Command{
+	Use:   "token",
+	Short: "your openai token",
+	Long: `Your openai token.
+	It will be used to call the OpenAI API.
+	
+	gpt-cli config token
+	gpt-cli config token your_token.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("create called")
+		if len(args) == 0 {
+			token := viper.GetString(config.TokenConfigKey)
+			if token == "" {
+				fmt.Println("token not set")
+				return
+			}
+			fmt.Printf("token=%s\n", viper.GetString(config.TokenConfigKey))
+			return
+		}
+		token := args[0]
+		viper.Set(config.TokenConfigKey, token)
+		if err := viper.WriteConfig(); err != nil {
+			fmt.Println("set token fail")
+			fmt.Println(err)
+			return
+		}
+		fmt.Printf("set token success, token=%s\n", token)
 	},
 }
 
 func init() {
-	configCmd.AddCommand(createCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// createCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// createCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	configCmd.AddCommand(tokenCmd)
 }

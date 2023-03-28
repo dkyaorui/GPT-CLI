@@ -19,33 +19,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package cmd
+package config
 
-import (
-	"fmt"
-
-	"github.com/spf13/cobra"
+const (
+	ConfigFileFolderName = ".gpt-cli"
+	ConfigFileFileName   = "config"
+	ConfigFileType       = "yml"
 )
 
-// configCmd represents the config command
-var configCmd = &cobra.Command{
-	Use:   "config",
-	Short: "Manage gpt-cli configuration settings",
-	Long: `Manage gpt-cli configuration settings. For example:
-
-	Demo:
-
-	'gpt-cli config conf': print conf detail
-	'gpt-cli config conf configDetail': set conf value with configDetail
-
-	gpt-cli config token
-	gpt-cli config token your_token.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		// TODO print config file path
-		fmt.Println("config called")
-	},
-}
-
-func init() {
-	rootCmd.AddCommand(configCmd)
-}
+const (
+	TokenConfigKey = "token"
+)

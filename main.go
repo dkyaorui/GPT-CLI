@@ -21,8 +21,51 @@ THE SOFTWARE.
 */
 package main
 
-import "github.com/dkyaorui/gpt-cli/cmd"
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/dkyaorui/gpt-cli/cmd"
+	"github.com/dkyaorui/gpt-cli/config"
+
+	"github.com/spf13/viper"
+)
 
 func main() {
+
+	home, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	// config file's path: $HOME/.gpt-cli/config.yml
+	folderPath := filepath.Join(home, config.ConfigFileFolderName)
+	viper.AddConfigPath(folderPath)
+	viper.SetConfigName(config.ConfigFileFileName)
+	viper.SetConfigType(config.ConfigFileType)
+
+	viper.AutomaticEnv()
+
+	if err := viper.ReadInConfig(); err != nil {
+		fmt.Printf("Using config file %s is not exist.", viper.ConfigFileUsed())
+		fmt.Println("We are creating by default now.")
+
+		if _, err := os.Stat(folderPath); os.IsNotExist(err) {
+			if err := os.Mkdir(folderPath, 0755); err != nil {
+				fmt.Println("Create config file folder fail.")
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		}
+		// TODO Set default config
+		if err := viper.SafeWriteConfig(); err != nil {
+			fmt.Println("Create defualt config file fail.")
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}
+
 	cmd.Execute()
 }
