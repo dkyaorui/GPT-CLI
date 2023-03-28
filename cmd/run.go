@@ -24,10 +24,15 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"time"
 
-	"github.com/c-bata/go-prompt"
 	"github.com/charmbracelet/glamour"
 	"github.com/dkyaorui/gpt-cli/common"
+	"github.com/fzdwx/infinite"
+	"github.com/fzdwx/infinite/components"
+	"github.com/fzdwx/infinite/components/input/text"
+	"github.com/fzdwx/infinite/components/spinner"
+	"github.com/fzdwx/infinite/theme"
 	"github.com/sashabaranov/go-openai"
 	"github.com/spf13/cobra"
 )
@@ -37,12 +42,17 @@ func init() {
 }
 
 type Container struct {
-	client *openai.Client
-
+	client   *openai.Client
 	messages []openai.ChatCompletionMessage
 }
 
 const token = ""
+
+const (
+	interruptedCmd = 0
+	finishCmd      = 1
+	continueCmd    = 2
+)
 
 func (c *Container) InitContainer() {
 	c.client = openai.NewClient(token)
@@ -63,26 +73,94 @@ func (c *Container) resetMessages() {
 }
 
 func (c *Container) Run() {
-	fmt.Println("Press 'Ctrl+D' to exit")
-
-	p := prompt.New(
-		c.executor,
-		func(in prompt.Document) []prompt.Suggest {
-			s := []prompt.Suggest{
-				{Text: "reset", Description: "Reset the session"},
+	for {
+		inf := infinite.NewText(
+			text.WithPrompt("[In]: "),
+			text.WithPromptStyle(theme.DefaultTheme.PromptStyle),
+		)
+		input, err := inf.Display()
+		if err != nil {
+			return
+		}
+		switch input {
+		case "":
+			continue
+		case "exit":
+			return
+		case "reset":
+			c.resetMessages()
+			fmt.Println("chat session cleared.")
+		default:
+			if err := c.request(input); err != nil {
+				panic(err)
 			}
-			return prompt.FilterHasPrefix(s, in.GetWordBeforeCursor(), true)
-		},
-		prompt.OptionTitle("Sample Prompt"),
-		prompt.OptionPrefix("Input: "),
-		prompt.OptionInputTextColor(prompt.Blue),
-		prompt.OptionPrefixTextColor(prompt.Green),
-		prompt.OptionPreviewSuggestionTextColor(prompt.Green),
-		prompt.OptionSelectedSuggestionBGColor(prompt.DarkGray),
-		prompt.OptionSuggestionBGColor(prompt.LightGray),
-	)
+		}
+	}
+}
 
-	p.Run()
+func (c *Container) request(in string) error {
+	return infinite.NewSpinner(
+		spinner.WithShape(components.Dot),
+		//spinner.WithDisableOutputResult(),
+	).Display(func(spinner *spinner.Spinner) {
+
+		var total = int64(6000)
+		var response openai.ChatCompletionResponse
+		var err error
+		var cmdCh = make(chan int)
+		go func() {
+			response, err = c.client.CreateChatCompletion(context.Background(), openai.ChatCompletionRequest{
+				Model:    openai.GPT3Dot5Turbo0301,
+				Messages: c.generateMessage(common.ChatRoleUser, in),
+			})
+			cmdCh <- finishCmd
+		}()
+
+		for i := int64(0); i < total-1; i++ {
+			select {
+			case cmd := <-cmdCh:
+				switch cmd {
+				case finishCmd:
+					spinner.Finish("Done")
+					close(cmdCh)
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
+
+					message := response.Choices[0].Message
+					result := message.Content
+
+					c.addMessage(common.ChatRoleUser, in)
+					c.addMessage(message.Role, result)
+
+					var r, newTermRendererErr = glamour.NewTermRenderer(
+						glamour.WithAutoStyle(),
+						glamour.WithWordWrap(80),
+					)
+					if newTermRendererErr != nil {
+						fmt.Println(newTermRendererErr)
+						return
+					}
+
+					var renderResult, renderErr = r.Render(result)
+					if renderErr != nil {
+						fmt.Println(newTermRendererErr)
+						return
+					}
+					fmt.Printf("%s\n", string(renderResult))
+					return
+				}
+			default:
+				spinner.Refresh("Wait...")
+				time.Sleep(time.Millisecond * 50)
+			}
+		}
+
+		spinner.Finish("time out, please retry")
+
+	})
+
 }
 
 func (c *Container) addMessage(role, content string) {
@@ -93,58 +171,12 @@ func (c *Container) addMessage(role, content string) {
 }
 
 func (c *Container) generateMessage(role, content string) []openai.ChatCompletionMessage {
-	var requestMessages = c.messages
+	requestMessages := c.messages
 	requestMessages = append(requestMessages, openai.ChatCompletionMessage{
 		Role:    role,
 		Content: content,
 	})
 	return requestMessages
-}
-
-func (c *Container) executor(in string) {
-	var result string
-
-	switch in {
-	case "":
-		return
-	case "reset":
-		c.resetMessages()
-		result = "chat session cleared."
-	default:
-		var response, createErr = c.client.CreateChatCompletion(context.Background(), openai.ChatCompletionRequest{
-			Model:    openai.GPT3Dot5Turbo0301,
-			Messages: c.generateMessage(common.ChatRoleUser, in),
-		})
-
-		if createErr != nil {
-			fmt.Println(createErr)
-			return
-		}
-
-		var message = response.Choices[0].Message
-
-		result = message.Content
-
-		c.addMessage(common.ChatRoleUser, in)
-		c.addMessage(message.Role, result)
-
-	}
-
-	var r, newTermRendererErr = glamour.NewTermRenderer(
-		glamour.WithAutoStyle(),
-		glamour.WithWordWrap(80),
-	)
-	if newTermRendererErr != nil {
-		fmt.Println(newTermRendererErr)
-		return
-	}
-	var renderResult, renderErr = r.Render(result)
-	if renderErr != nil {
-		fmt.Println(newTermRendererErr)
-		return
-	}
-	fmt.Printf("%s\n", string(renderResult))
-
 }
 
 // runCmd represents the run command
