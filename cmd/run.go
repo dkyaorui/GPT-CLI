@@ -70,10 +70,12 @@ func (c *Container) resetMessages() {
 }
 
 func (c *Container) Run() {
+	fmt.Println("Input `-h` for help")
 	for {
 		inf := infinite.NewText(
-			text.WithPrompt("[In]: "),
+			text.WithPrompt("[In]:"),
 			text.WithPromptStyle(theme.DefaultTheme.PromptStyle),
+			text.WithKeyMap(components.InputDefaultKeyMap()),
 		)
 		input, err := inf.Display()
 		if err != nil {
@@ -82,9 +84,16 @@ func (c *Container) Run() {
 		switch input {
 		case "":
 			continue
-		case "exit":
+		case "-h":
+			fmt.Println(`
+-h for help;
+-exit for exit;
+-reset for reset chat session;
+	`)
+			continue
+		case "-exit":
 			return
-		case "reset":
+		case "-reset":
 			c.resetMessages()
 			fmt.Println("chat session cleared.")
 		default:
