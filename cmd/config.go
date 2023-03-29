@@ -25,24 +25,21 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // configCmd represents the config command
 var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "Manage gpt-cli configuration settings",
-	Long: `Manage gpt-cli configuration settings. For example:
+	Long: `Manage gpt-cli configuration settings.
+	
+	'gpt-cli config' will print current config file path.
 
-	Demo:
-
-	'gpt-cli config conf': print conf detail
-	'gpt-cli config conf configDetail': set conf value with configDetail
-
-	gpt-cli config token
-	gpt-cli config token your_token.`,
+	More detail see 'gpt-cli config -h'.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO print config file path
-		fmt.Println("config called")
+		fmt.Printf("Config file path:%s\n", viper.ConfigFileUsed())
+		fmt.Println("More detail see 'gpt-cli config -h'.")
 	},
 }
 

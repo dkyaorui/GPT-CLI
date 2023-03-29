@@ -21,6 +21,8 @@ THE SOFTWARE.
 */
 package config
 
+import "github.com/sashabaranov/go-openai"
+
 const (
 	ConfigFileFolderName = ".gpt-cli"
 	ConfigFileFileName   = "config"
@@ -29,4 +31,28 @@ const (
 
 const (
 	TokenConfigKey = "token"
+	ModelConfigKey = "model"
+)
+
+var (
+	ModelList = []string{
+		openai.GPT432K0314,
+		openai.GPT432K,
+		openai.GPT4,
+		openai.GPT3Dot5Turbo0301,
+		openai.GPT40314,
+		openai.GPT3Dot5Turbo,
+		openai.GPT3TextDavinci003,
+		openai.GPT3TextDavinci002,
+		openai.GPT3TextCurie001,
+		openai.GPT3TextBabbage001,
+		openai.GPT3TextAda001,
+		openai.GPT3TextDavinci001,
+		openai.GPT3DavinciInstructBeta,
+		openai.GPT3Davinci,
+		openai.GPT3CurieInstructBeta,
+		openai.GPT3Curie,
+		openai.GPT3Ada,
+		openai.GPT3Babbage,
+	}
 )

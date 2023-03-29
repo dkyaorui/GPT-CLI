@@ -40,10 +40,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-func init() {
-	rootCmd.AddCommand(runCmd)
-}
-
 type Container struct {
 	client   *openai.Client
 	messages []openai.ChatCompletionMessage
@@ -190,4 +186,8 @@ var runCmd = &cobra.Command{
 		container.InitContainer()
 		container.Run()
 	},
+}
+
+func init() {
+	rootCmd.AddCommand(runCmd)
 }

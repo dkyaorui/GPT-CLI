@@ -25,22 +25,29 @@ import (
 	"fmt"
 
 	"github.com/dkyaorui/gpt-cli/config"
+	"github.com/fzdwx/infinite"
+	"github.com/fzdwx/infinite/components/input/text"
+	"github.com/fzdwx/infinite/theme"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
+var showTokenFlag bool
+
 // tokenCmd represents the token command
 var tokenCmd = &cobra.Command{
 	Use:   "token",
-	Short: "your openai token",
-	Long: `Your openai token.
+	Short: "Config openai token.",
+	Long: `Config openai token.
 	It will be used to call the OpenAI API.
 	
+	Demo:
+
 	gpt-cli config token
-	gpt-cli config token your_token.`,
+	gpt-cli config token [-s, --show].`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
+		if showTokenFlag {
 			token := viper.GetString(config.TokenConfigKey)
 			if token == "" {
 				fmt.Println("token not set")
@@ -49,17 +56,26 @@ var tokenCmd = &cobra.Command{
 			fmt.Printf("token=%s\n", viper.GetString(config.TokenConfigKey))
 			return
 		}
-		token := args[0]
-		viper.Set(config.TokenConfigKey, token)
+
+		inf := infinite.NewText(
+			text.WithPrompt("Input your token: "),
+			text.WithPromptStyle(theme.DefaultTheme.PromptStyle),
+		)
+		input, err := inf.Display()
+		if err != nil {
+			return
+		}
+		viper.Set(config.TokenConfigKey, input)
 		if err := viper.WriteConfig(); err != nil {
 			fmt.Println("set token fail")
 			fmt.Println(err)
 			return
 		}
-		fmt.Printf("set token success, token=%s\n", token)
+		fmt.Printf("set token success, token=%s\n", input)
 	},
 }
 
 func init() {
 	configCmd.AddCommand(tokenCmd)
+	tokenCmd.PersistentFlags().BoolVarP(&showTokenFlag, "show", "s", false, "show current token")
 }

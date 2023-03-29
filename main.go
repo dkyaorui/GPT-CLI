@@ -28,6 +28,7 @@ import (
 
 	"github.com/dkyaorui/gpt-cli/cmd"
 	"github.com/dkyaorui/gpt-cli/config"
+	"github.com/sashabaranov/go-openai"
 
 	"github.com/spf13/viper"
 )
@@ -59,12 +60,16 @@ func main() {
 				os.Exit(1)
 			}
 		}
-		// TODO Set default config
+		// Set defualt config
+		viper.Set(config.ModelConfigKey, openai.GPT3Dot5Turbo0301)
 		if err := viper.SafeWriteConfig(); err != nil {
 			fmt.Println("Create defualt config file fail.")
 			fmt.Println(err)
 			os.Exit(1)
 		}
+		viper.AddConfigPath(folderPath)
+		viper.SetConfigName(config.ConfigFileFileName)
+		viper.SetConfigType(config.ConfigFileType)
 	}
 
 	cmd.Execute()
