@@ -8,7 +8,7 @@
     go install github.com/dkyaorui/gpt-cli@latest
 ```
 
-### Config Token
+### Config token
 
 #### Set your private token
 
@@ -16,7 +16,7 @@
 gpt-cli config token
 ```
 
-#### View Token has been configured
+#### View token has been configured
 
 ```
 gpt-cli config token -s
@@ -24,13 +24,13 @@ gpt-cli config token -s
 
 ### Config Model
 
-#### Set your private token
+#### Set GPT model
 
 ```
 gpt-cli config model
 ```
 
-#### View Token has been configured
+#### View model has been configured
 
 ```
 gpt-cli config model -s
