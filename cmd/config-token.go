@@ -65,6 +65,9 @@ var tokenCmd = &cobra.Command{
 		if err != nil {
 			return
 		}
+		if input == "" {
+			return
+		}
 		viper.Set(config.TokenConfigKey, input)
 		if err := viper.WriteConfig(); err != nil {
 			fmt.Println("set token fail")
