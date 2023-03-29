@@ -29,7 +29,6 @@ import (
 	"github.com/dkyaorui/gpt-cli/common"
 	"github.com/dkyaorui/gpt-cli/config"
 
-	"github.com/charmbracelet/glamour"
 	"github.com/fzdwx/infinite"
 	"github.com/fzdwx/infinite/components"
 	"github.com/fzdwx/infinite/components/input/text"
@@ -70,7 +69,9 @@ func (c *Container) resetMessages() {
 }
 
 func (c *Container) Run() {
-	fmt.Println("Input `-h` for help")
+
+	common.PrintToMarkdown(common.CliHelpInfo)
+
 	for {
 		inf := infinite.NewText(
 			text.WithPrompt("[In]:"),
@@ -85,17 +86,14 @@ func (c *Container) Run() {
 		case "":
 			continue
 		case "-h":
-			fmt.Println(`
--h for help;
--exit for exit;
--reset for reset chat session;
-	`)
+			common.PrintToMarkdown(common.CliHelpInfo)
 			continue
 		case "-exit":
+			fmt.Printf("\nBey.\n")
 			return
 		case "-reset":
 			c.resetMessages()
-			fmt.Println("chat session cleared.")
+			fmt.Printf("\nChat context cleared.\n\n")
 		default:
 			if err := c.request(input); err != nil {
 				panic(err)
@@ -107,7 +105,6 @@ func (c *Container) Run() {
 func (c *Container) request(in string) error {
 	return infinite.NewSpinner(
 		spinner.WithShape(components.Dot),
-		//spinner.WithDisableOutputResult(),
 	).Display(func(spinner *spinner.Spinner) {
 
 		var total = int64(6000)
@@ -127,8 +124,11 @@ func (c *Container) request(in string) error {
 			case cmd := <-cmdCh:
 				switch cmd {
 				case finishCmd:
+
 					spinner.Finish("Done")
+
 					close(cmdCh)
+
 					if err != nil {
 						fmt.Println(err)
 						return
@@ -140,21 +140,7 @@ func (c *Container) request(in string) error {
 					c.addMessage(common.ChatRoleUser, in)
 					c.addMessage(message.Role, result)
 
-					var r, newTermRendererErr = glamour.NewTermRenderer(
-						glamour.WithAutoStyle(),
-						glamour.WithWordWrap(80),
-					)
-					if newTermRendererErr != nil {
-						fmt.Println(newTermRendererErr)
-						return
-					}
-
-					var renderResult, renderErr = r.Render(result)
-					if renderErr != nil {
-						fmt.Println(newTermRendererErr)
-						return
-					}
-					fmt.Printf("%s\n", string(renderResult))
+					common.PrintToMarkdown(result)
 					return
 				}
 			default:
@@ -163,8 +149,7 @@ func (c *Container) request(in string) error {
 			}
 		}
 
-		spinner.Finish("time out, please retry")
-
+		spinner.Failed("time out, please retry")
 	})
 
 }

@@ -96,16 +96,14 @@ var modelCmd = &cobra.Command{
 			singleselect.WithFilterInput(input),
 		).Display("select model: ")
 		if err != nil {
-			fmt.Println(err)
-			return
+			panic(err)
 		}
 
 		model := config.ModelList[choiceIndex]
 		viper.Set(config.ModelConfigKey, model)
 		if err := viper.WriteConfig(); err != nil {
 			fmt.Println("set model fail")
-			fmt.Println(err)
-			return
+			panic(err)
 		}
 		fmt.Printf("set model success, model=%s\n", model)
 	},

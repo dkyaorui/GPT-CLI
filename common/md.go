@@ -19,18 +19,28 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package common
 
-const (
-	ChatRoleSystem    = "system"
-	ChatRoleAssistant = "assistant"
-	ChatRoleUser      = "user"
+import (
+	"fmt"
+
+	"github.com/charmbracelet/glamour"
 )
 
-const CliHelpInfo = "" +
-	"`-h`     show help info\n" +
-	"\n" +
-	"`-exit`  exit cli\n" +
-	"\n" +
-	"`-reset` reset chat context\n" +
-	"\n"
+func PrintToMarkdown(content string) {
+	render, err := glamour.NewTermRenderer(
+		glamour.WithAutoStyle(),
+		glamour.WithWordWrap(80),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	result, err := render.Render(content)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(result))
+}
